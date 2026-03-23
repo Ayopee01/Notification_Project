@@ -23,20 +23,25 @@ export type NotificationResponse = {
 export type RequestBody = {
     agentId?: string;
     appId?: string;
+
+    // single mode
     userId?: string;
     message?: string;
+
+    // batch mode
+    data?: NotificationItem[];
+
     sendDateTime?: string | null;
 };
 
 export type ApiResult = {
-  ok: boolean;
-  token?: string;
-  notifyData?: {
-    result?: string[];
-    requestTimeStamp?: number;
-    messageCode?: number;
-    message?: string | null;
-  };
-  message?: string;
+    ok: boolean;
+    token?: string;
+    notifyData?: {
+        result?: string[];
+        requestTimeStamp?: number;
+        messageCode?: number;
+        message?: string | null;
+    };
+    message?: string;
 };
-

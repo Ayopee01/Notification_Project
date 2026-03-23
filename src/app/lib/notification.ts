@@ -1,8 +1,9 @@
-import type { GdxAuthResponse, NotificationResponse } from "../types/notification";
+import type { GdxAuthResponse, NotificationItem, NotificationResponse } from "../types/notification";
 
 export async function sendDgaNotification(params: {
-    userId: string;
-    message: string;
+    appId?: string;
+    data: NotificationItem[];
+    sendDateTime?: string | null;
 }) {
     if (
         !process.env.GDX_AUTH_URL ||
@@ -45,13 +46,9 @@ export async function sendDgaNotification(params: {
             Token: token,
         },
         body: JSON.stringify({
-            appId: process.env.APP_ID || "",
-            data: [
-                {
-                    userId: params.userId,
-                    message: params.message,
-                },
-            ],
+            appId: params.appId || process.env.APP_ID || "",
+            data: params.data,
+            sendDateTime: params.sendDateTime ?? null,
         }),
         cache: "no-store",
     });
@@ -59,7 +56,7 @@ export async function sendDgaNotification(params: {
     const data: NotificationResponse = await res.json();
 
     if (!res.ok) {
-        throw new Error("Send notification failed");
+        throw new Error(data?.message || "Send notification failed");
     }
 
     return { token, data };
