@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendDgaNotification } from "../../lib/notification";
-import type { NotificationItem,RequestBody } from "../../types/notification";
+import type { NotificationItem, RequestBody } from "../../types/notification";
 
 export async function POST(req: NextRequest) {
     try {
@@ -59,11 +59,11 @@ export async function POST(req: NextRequest) {
             ];
         }
 
-        const result = await sendDgaNotification({
-            appId: body.appId,
-            data: items,
-            sendDateTime: body.sendDateTime ?? null,
-        });
+        const result = await sendDgaNotification(
+            { appId: body.appId },
+            items,
+            body.sendDateTime ?? null
+        );
 
         return NextResponse.json({
             ok: true,

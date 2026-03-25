@@ -122,11 +122,10 @@ function NotificationPage() {
           <button
             type="button"
             onClick={() => setMode("single")}
-            className={`rounded-xl px-4 py-2 text-sm font-medium transition ${
-              mode === "single"
+            className={`rounded-xl px-4 py-2 text-sm font-medium transition ${mode === "single"
                 ? "bg-blue-600 text-white"
                 : "border bg-white text-gray-700 hover:bg-gray-50"
-            }`}
+              }`}
           >
             Single
           </button>
@@ -134,11 +133,10 @@ function NotificationPage() {
           <button
             type="button"
             onClick={() => setMode("batch")}
-            className={`rounded-xl px-4 py-2 text-sm font-medium transition ${
-              mode === "batch"
+            className={`rounded-xl px-4 py-2 text-sm font-medium transition ${mode === "batch"
                 ? "bg-blue-600 text-white"
                 : "border bg-white text-gray-700 hover:bg-gray-50"
-            }`}
+              }`}
           >
             Batch
           </button>
@@ -222,8 +220,8 @@ function NotificationPage() {
             {loading
               ? "Sending..."
               : mode === "single"
-              ? "Send Single"
-              : "Send Batch"}
+                ? "Send Single"
+                : "Send Batch"}
           </button>
 
           {result && (
