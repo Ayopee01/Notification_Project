@@ -1,7 +1,9 @@
+// Type ค่า Result/Token
 export type GdxAuthResponse = {
     Result?: string;
 };
 
+// Type userId, message
 export type NotificationItem = {
     userId: string;
     message: string;
@@ -20,6 +22,7 @@ export type NotificationResponse = {
     message?: string | null;
 };
 
+// Type Body
 export type RequestBody = {
     agentId?: string;
     appId?: string;
