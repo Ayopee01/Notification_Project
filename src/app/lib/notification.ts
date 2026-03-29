@@ -1,10 +1,11 @@
-import type { GdxAuthResponse, NotificationItem, NotificationRequest, NotificationResponse } from "../types/notification";
+import type { GdxAuthResponse, Data, Request, Response } from "../types/notification";
 
 export async function sendDgaNotification(
     params: {
-        AppId?: string;
+        appId?: string;
+        mToken?: string;
     },
-    data: NotificationItem[],
+    data: Data[],
     sendDateTime?: string | null
 ) {
     if (
@@ -18,10 +19,12 @@ export async function sendDgaNotification(
         throw new Error("Missing env config");
     }
 
+    // Step 1: GDX Authentication to get token
     const authRes = await fetch(
         `${process.env.GDX_AUTH_URL}?ConsumerSecret=${encodeURIComponent(
             process.env.DGA_CONSUMER_SECRET || ""
-        )}&AgentID=${encodeURIComponent(process.env.DGA_AGENT_ID || "")}`,
+        )}&AgentID=${encodeURIComponent(params.mToken || process.env.DGA_AGENT_ID || "")}` // ใช้ mToken ที่ถูกส่งเข้ามาใน landing url หรือ SessionID, หรือ UserID ของผู้ใช้ เพื่อใช้ tracking เคส ที่อาจจะเกิดขึ้น
+        ,
         {
             method: "GET",
             headers: {
@@ -32,20 +35,24 @@ export async function sendDgaNotification(
         }
     );
 
+    // Check GDX Authentication response
     const authData: GdxAuthResponse = await authRes.json();
 
     if (!authRes.ok || !authData?.Result) {
         throw new Error("GDX auth failed");
     }
 
+    // ค่า Result จาก GDX Authentication
     const token = authData.Result;
 
-    const payload: NotificationRequest = {
-        AppId: params.AppId || process.env.APP_ID || "",
-        Data: data,
-        ...(sendDateTime ? { SendDateTime: sendDateTime } : {}),
+    // Body ที่ API Request มา
+    const body: Request = {
+        appId: params.appId || process.env.APP_ID || "",
+        data: data,
+        ...(sendDateTime ? { sendDateTime } : {}),
     };
 
+    // Step 2: Send notification to DGA API
     const res = await fetch(process.env.NOTIFICATION_API_URL || "", {
         method: "POST",
         headers: {
@@ -53,15 +60,17 @@ export async function sendDgaNotification(
             "Content-Type": "application/json",
             Token: token,
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(body),
         cache: "no-store",
     });
 
-    const responseData: NotificationResponse = await res.json();
+    // Check Notification response
+    const responseData: Response = await res.json();
 
     if (!res.ok) {
         throw new Error(responseData?.message || "Send notification failed");
     }
 
+    // ส่ง token และ response data กลับไปให้ Front-end เพื่อแสดงผลใน Log 
     return { token, data: responseData };
 }

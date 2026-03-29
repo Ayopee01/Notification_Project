@@ -1,25 +1,32 @@
 "use client";
 
 import { useState } from "react";
-import type { SyntheticEvent } from "react";
+// icons
 import { FiPlus, FiTrash2 } from "react-icons/fi";
+// types
+import type { SyntheticEvent } from "react";
 import type { ApiResult } from "../app/types/notification";
 
 function NotificationPage() {
-  const [userIds, setUserIds] = useState<string[]>([""]);
-  const [message, setMessage] = useState("");
-  const [sendDateTime, setSendDateTime] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<ApiResult | null>(null);
+  const [userIds, setUserIds] = useState<string[]>([""]); // เริ่มต้นด้วย User ID 1 รายการ
+  const [message, setMessage] = useState(""); // ข้อความที่ต้องการส่ง
+  const [sendDateTime, setSendDateTime] = useState(""); // วันที่และเวลาที่ต้องการส่ง (รูปแบบ datetime-local)
+  const [loading, setLoading] = useState(false); // สถานะการส่งข้อมูล
+  const [result, setResult] = useState<ApiResult | null>(null); // ผลลัพธ์ที่ได้รับจาก API หลังส่งข้อมูล
 
+  // ------------------------------- Fucntion -------------------------------
+
+  // Function สำหรับเพิ่ม User ID ใหม่
   function addUser() {
     setUserIds((prev) => [...prev, ""]);
   }
 
+  // Function สำหรับอัปเดตค่า User ID ในตำแหน่งที่ระบุ
   function updateUser(index: number, value: string) {
     setUserIds((prev) => prev.map((item, i) => (i === index ? value : item)));
   }
 
+  // Function สำหรับลบ User ID ออก โดยจะไม่ให้ลบจนเหลือต่ำกว่า 1 รายการ
   function removeUser(index: number) {
     setUserIds((prev) => {
       if (prev.length === 1) return prev;
@@ -27,17 +34,20 @@ function NotificationPage() {
     });
   }
 
+  // Function สำหรับจัดการเมื่อผู้ใช้กดส่งข้อมูล
   async function onSubmit(e: SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setResult(null);
 
+    // ตรวจสอบความถูกต้องของข้อมูลก่อนส่งไปยัง API
     try {
       const trimmedMessage = message.trim();
       const users = userIds
         .map((id) => id.trim())
         .filter((id) => id.length > 0);
 
+      // หากข้อความว่าง ให้แสดง Error
       if (!trimmedMessage) {
         setResult({
           ok: false,
@@ -46,6 +56,7 @@ function NotificationPage() {
         return;
       }
 
+      // หากไม่มี User ID ที่ถูกกรอก ให้แสดง Error
       if (users.length === 0) {
         setResult({
           ok: false,
@@ -54,6 +65,7 @@ function NotificationPage() {
         return;
       }
 
+      // หากจำนวน User ID เกิน 1000 ให้แสดง Error
       if (users.length > 1000) {
         setResult({
           ok: false,
@@ -62,28 +74,33 @@ function NotificationPage() {
         return;
       }
 
+      // เตรียมข้อมูลใน Data ส่งไป Function sendDgaNotification
       const formattedSendDateTime = sendDateTime
-        ? `${sendDateTime}:00`
+        ? `${sendDateTime}:00+07:00`
         : null;
 
-      const payload = {
-        Data: users.map((id) => ({
-          UserId: id,
-          Message: trimmedMessage,
+      // สร้าง body เพื่อส่งไปยัง API
+      const body = {
+        data: users.map((id) => ({
+          userId: id,
+          message: trimmedMessage,
         })),
-        SendDateTime: formattedSendDateTime,
+        sendDateTime: formattedSendDateTime,
       };
 
+      // ส่งข้อมูลไปยัง API Route
       const res = await fetch("/api/notification", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(body),
       });
 
+      // รับผลลัพธ์จาก API และแสดงใน Log
       const data: ApiResult = await res.json();
       setResult(data);
+      // หาก API ตอบกลับไม่สำเร็จ ให้แสดง Error
     } catch (error) {
       setResult({
         ok: false,
@@ -94,23 +111,22 @@ function NotificationPage() {
     }
   }
 
+  // ------------------------------- UI -------------------------------
+
   return (
     <main className="mx-auto max-w-2xl p-6">
       <div className="rounded-2xl border bg-white p-5 shadow-sm">
         <div className="mb-5">
           <h1 className="text-xl font-semibold text-gray-900">
-            Notification Sender
+            Notification Inbox
           </h1>
-          <p className="mt-1 text-sm text-gray-500">
-            กรอก User ID 1 คนหรือหลายคน โดยระบบจะสร้าง Data array ให้อัตโนมัติ
-          </p>
         </div>
 
         <form onSubmit={onSubmit} className="space-y-5">
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <label className="block text-sm font-medium text-gray-700">
-                User IDs
+                User ID
               </label>
 
               <button
@@ -172,7 +188,7 @@ function NotificationPage() {
               className="w-full rounded-xl border px-3 py-2.5 outline-none transition focus:border-blue-500"
             />
             <p className="text-xs text-gray-500">
-              ถ้าไม่ระบุ ระบบจะส่งทันที
+              ถ้าไม่ระบุเวลา ระบบจะส่งทันที
             </p>
           </div>
 
