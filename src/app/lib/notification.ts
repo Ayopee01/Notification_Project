@@ -1,8 +1,8 @@
-import type { GdxAuthResponse, NotificationItem, NotificationResponse } from "../types/notification";
+import type { GdxAuthResponse, NotificationItem, NotificationRequest, NotificationResponse } from "../types/notification";
 
 export async function sendDgaNotification(
     params: {
-        appId?: string;
+        AppId?: string;
     },
     data: NotificationItem[],
     sendDateTime?: string | null
@@ -18,12 +18,9 @@ export async function sendDgaNotification(
         throw new Error("Missing env config");
     }
 
-    // Step 1 GDX Authentication
     const authRes = await fetch(
         `${process.env.GDX_AUTH_URL}?ConsumerSecret=${encodeURIComponent(
             process.env.DGA_CONSUMER_SECRET || ""
-            // ใช้ mToken ที่ถูกส่งเข้ามาใน landing url หรือ SessionID, หรือ UserID ของผู้ใช้ เพื่อใช้ tracking เคส ที่อาจจะเกิดขึ้น
-            // จาก Code ขอยกตัวอย่างด้วยการ Fix ค่า AgentID จาก .env
         )}&AgentID=${encodeURIComponent(process.env.DGA_AGENT_ID || "")}`,
         {
             method: "GET",
@@ -41,10 +38,14 @@ export async function sendDgaNotification(
         throw new Error("GDX auth failed");
     }
 
-    // เก็บค่า Result ไว้ในตัวแปร token
     const token = authData.Result;
 
-    // Step 2 Notification
+    const payload: NotificationRequest = {
+        AppId: params.AppId || process.env.APP_ID || "",
+        Data: data,
+        ...(sendDateTime ? { SendDateTime: sendDateTime } : {}),
+    };
+
     const res = await fetch(process.env.NOTIFICATION_API_URL || "", {
         method: "POST",
         headers: {
@@ -52,11 +53,7 @@ export async function sendDgaNotification(
             "Content-Type": "application/json",
             Token: token,
         },
-        body: JSON.stringify({
-            appId: params.appId || process.env.APP_ID || "",
-            data,
-            sendDateTime: sendDateTime ?? null,
-        }),
+        body: JSON.stringify(payload),
         cache: "no-store",
     });
 

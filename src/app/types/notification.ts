@@ -1,50 +1,34 @@
-// Type ค่า Result/Token
+
+// Type ค่า Result ที่ได้รับในขั้นตอน GDX Authentication
 export type GdxAuthResponse = {
-    Result?: string;
+  Result?: string;
 };
 
-// Type userId, message
-export type NotificationItem = {
-    userId: string;
-    message: string;
-};
-
+// Type ของ body ที่ api Request มา
 export type NotificationRequest = {
-    appId: string;
-    data: NotificationItem[];
-    sendDateTime?: string | null;
+  AppId?: string;
+  Data: NotificationItem[];
+  SendDateTime?: string | null;
 };
 
+// Type ข้อมูลใน data ที่ประกอบไปใน body
+export type NotificationItem = {
+  UserId: string;
+  Message: string;
+};
+
+// Type response ที่ตอบกลับมาจาก API Notification
 export type NotificationResponse = {
-    result?: string[];
-    requestTimeStamp?: number;
-    messageCode?: number;
-    message?: string | null;
+  result?: string[];
+  requestTimeStamp?: number;
+  messageCode?: number;
+  message?: string | null;
 };
 
-// Type Body
-export type RequestBody = {
-    agentId?: string;
-    appId?: string;
-
-    // single mode
-    userId?: string;
-    message?: string;
-
-    // batch mode
-    data?: NotificationItem[];
-
-    sendDateTime?: string | null;
-};
-
+// Type response ที่แสดงไปใน Log ของ Front-end
 export type ApiResult = {
-    ok: boolean;
-    token?: string;
-    notifyData?: {
-        result?: string[];
-        requestTimeStamp?: number;
-        messageCode?: number;
-        message?: string | null;
-    };
-    message?: string;
+  ok: boolean;
+  token?: string;
+  notifyData?: NotificationResponse;
+  message?: string;
 };
