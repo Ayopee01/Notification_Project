@@ -8,6 +8,7 @@ import type { ApiResult } from "../app/types/notification";
 function NotificationPage() {
   const [userIds, setUserIds] = useState<string[]>([""]);
   const [message, setMessage] = useState("");
+  const [sendDateTime, setSendDateTime] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ApiResult | null>(null);
 
@@ -33,7 +34,9 @@ function NotificationPage() {
 
     try {
       const trimmedMessage = message.trim();
-      const users = userIds.map((id) => id.trim()).filter((id) => id.length > 0);
+      const users = userIds
+        .map((id) => id.trim())
+        .filter((id) => id.length > 0);
 
       if (!trimmedMessage) {
         setResult({
@@ -59,11 +62,16 @@ function NotificationPage() {
         return;
       }
 
+      const formattedSendDateTime = sendDateTime
+        ? `${sendDateTime}:00`
+        : null;
+
       const payload = {
-        data: users.map((id) => ({
-          userId: id,
-          message: trimmedMessage,
+        Data: users.map((id) => ({
+          UserId: id,
+          Message: trimmedMessage,
         })),
+        SendDateTime: formattedSendDateTime,
       };
 
       const res = await fetch("/api/notification", {
@@ -94,7 +102,7 @@ function NotificationPage() {
             Notification Sender
           </h1>
           <p className="mt-1 text-sm text-gray-500">
-            กรอก User ID 1 คนหรือหลายคน โดยระบบจะสร้าง data array ให้อัตโนมัติ
+            กรอก User ID 1 คนหรือหลายคน โดยระบบจะสร้าง Data array ให้อัตโนมัติ
           </p>
         </div>
 
@@ -151,6 +159,21 @@ function NotificationPage() {
               rows={5}
               className="w-full rounded-xl border px-3 py-2.5 outline-none transition focus:border-blue-500"
             />
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700">
+              Send Date Time
+            </label>
+            <input
+              type="datetime-local"
+              value={sendDateTime}
+              onChange={(e) => setSendDateTime(e.target.value)}
+              className="w-full rounded-xl border px-3 py-2.5 outline-none transition focus:border-blue-500"
+            />
+            <p className="text-xs text-gray-500">
+              ถ้าไม่ระบุ ระบบจะส่งทันที
+            </p>
           </div>
 
           <button
