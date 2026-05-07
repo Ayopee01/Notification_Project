@@ -1,36 +1,101 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DGA Notification API Test Project
 
-## Getting Started
+โปรเจกต์นี้เป็นระบบทดสอบการส่ง Notification ผ่าน DGA Notification API โดยใช้ Next.js API Route สำหรับรับข้อมูลจาก Front-end หรือ Postman แล้วส่งต่อไปยัง DGA Notification API
 
-First, run the development server:
+Response ที่ส่งกลับจาก `/api/notification` จะเป็นรูปแบบตาม Doc โดยตรง
+
+## 1. Installation
+
+ติดตั้ง Dependencies ของโปรเจกต์
+
+```bash
+npm i
+```
+
+---
+
+## 2. Environment Variables
+
+สร้างไฟล์ `.env` ที่ root project
+
+ตัวอย่าง:
+
+```env
+# Base URLs
+GDX_AUTH_URL=https://api.egov.go.th/ws/auth/validate
+NOTIFICATION_API_URL=https://api.egov.go.th/ws/dga/czp/uat/v1/core/notification/push
+
+# DGA Keys (TEST)
+DGA_CONSUMER_KEY= โปรดระบุ
+DGA_CONSUMER_SECRET= โปรดระบุ
+DGA_AGENT_ID=8a816448-0207-45f4-8613-65b0ad80afd0
+APP_ID= โปรดระบุ
+```
+
+คำอธิบาย Environment Variables
+
+| Key | Description |
+|---|---|
+| `GDX_AUTH_URL` | URL สำหรับตรวจสอบ GDX Authentication |
+| `NOTIFICATION_API_URL` | URL สำหรับส่ง Notification |
+| `DGA_CONSUMER_KEY` | Consumer Key ที่ได้รับจาก DGA |
+| `DGA_CONSUMER_SECRET` | Consumer Secret ที่ได้รับจาก DGA |
+| `DGA_AGENT_ID` | Agent ID สำหรับทดสอบบน Localhost |
+| `APP_ID` | Application ID สำหรับส่ง Notification |
+
+> หมายเหตุ: ไม่ควร commit ไฟล์ `.env` ขึ้น repository
+
+---
+
+## 3. Run Project
+
+Run Project ใน Development
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+---
+
+## 4. Request Body สำหรับทดสอบบน Postman
+
+ใช้ Body แบบ `raw` และเลือกชนิดเป็น `JSON`
+
+```json
+{
+  "appId": "{{T-APP-ID}}",
+  "data": [
+    {
+      "message": "ทดสอบข้อความ",
+      "userId": "{{T-MOCK-USERID}}"
+    }
+  ],
+  "sendDateTime": null
+}
+```
+---
+
+## 5. sendDateTime
+
+ถ้าต้องการส่ง Notification ทันที ให้ส่งค่าเป็น `null`
+
+```json
+{
+  "sendDateTime": null
+}
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+ถ้าต้องการตั้งเวลาส่ง ให้ส่งเป็น String ตาม format นี้
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```txt
+YYYY-MM-DDTHH:mm:ss+07:00
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+ตัวอย่าง:
 
-## Learn More
+```json
+{
+  "sendDateTime": "2021-06-01T19:48:00+07:00"
+}
+```
+---
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
