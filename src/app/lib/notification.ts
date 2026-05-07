@@ -6,7 +6,7 @@ export async function sendDgaNotification(
         mToken?: string;
     },
     data: Data[],
-    sendDateTime?: string | null
+    sendDateTime?: Date | null
 ) {
     if (
         !process.env.GDX_AUTH_URL ||

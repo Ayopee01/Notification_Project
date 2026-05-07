@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sendDgaNotification } from "../../lib/notification";
-import type { Data, Request } from "../../types/notification";
+import { sendDgaNotification } from "@/src/app/lib/notification";
+import type { Data, Request, Response } from "@/src/app/types/notification";
 
 // API Route สำหรับรับคำขอส่ง Notification จาก Front-end
 export async function POST(req: NextRequest) {
@@ -8,10 +8,10 @@ export async function POST(req: NextRequest) {
     // รับ Body จาก Request และแปลงเป็น JSON
     const body: Request = await req.json();
 
-    // หาก body,data ไม่ใช่ Array หรือ ไม่มีข้อมูล ให้ตอบกลับด้วย Error
+    // หาก body.data ไม่ใช่ Array หรือไม่มีข้อมูล ให้ตอบกลับด้วย Error
     if (!Array.isArray(body.data) || body.data.length === 0) {
       return NextResponse.json(
-        { ok: false, message: "Data is required" },
+        { message: "Data is required" },
         { status: 400 }
       );
     }
@@ -19,12 +19,12 @@ export async function POST(req: NextRequest) {
     // หาก Data มีข้อมูลมากกว่า 1000 รายการ ให้ตอบกลับด้วย Error
     if (body.data.length > 1000) {
       return NextResponse.json(
-        { ok: false, message: "Data จำกัดไม่เกิน 1000 รายการต่อ request" },
+        { message: "Data จำกัดไม่เกิน 1000 รายการต่อ request" },
         { status: 400 }
       );
     }
 
-    // ตรวจสอบแต่ละ item ใน Data ว่ามี userId และ message หรือไม่ หากไม่ให้ตอบกลับด้วย Error
+    // ตรวจสอบแต่ละ item ใน Data ว่ามี userId และ message หรือไม่
     const invalidIndex = body.data.findIndex(
       (item) => !item.userId?.trim() || !item.message?.trim()
     );
@@ -33,7 +33,6 @@ export async function POST(req: NextRequest) {
     if (invalidIndex !== -1) {
       return NextResponse.json(
         {
-          ok: false,
           message: `Data[${invalidIndex}] must contain userId and message`,
         },
         { status: 400 }
@@ -42,31 +41,27 @@ export async function POST(req: NextRequest) {
 
     // เอา body.data มาวนทีละรายการด้วย map() สร้าง array ใหม่ชื่อ items
     const items: Data[] = body.data.map((item) => ({
-      userId: item.userId.trim(), // ตัดช่องว่างหน้า-หลังด้วย trim()
-      message: item.message.trim(), // ตัดช่องว่างหน้า-หลังด้วย trim()
+      userId: item.userId.trim(),
+      message: item.message.trim(),
     }));
 
     // เรียกใช้ Function sendDgaNotification จาก lib
     const result = await sendDgaNotification(
       {
-        appId: body.appId, // รับ appId จาก body หรือใช้ค่า default จาก env
+        appId: body.appId,
       },
-      items, // ส่ง items ที่ได้จากการ map() ไปยัง Function
-      body.sendDateTime ?? null // ส่ง sendDateTime จาก body หรือใช้ค่า null หากไม่มี
+      items,
+      body.sendDateTime ?? null
     );
 
-    // หากส่งสำเร็จ ให้ตอบกลับด้วย token และข้อมูล response จาก API
-    return NextResponse.json({
-      ok: true,
-      token: result.token,
-      notifyData: result.data,
-    });
-  } catch (error) {
+    // response จาก API 
+    const notifyData: Response = result.data;
 
-    // หากไม่สำเร็จ ให้ตอบกลับด้วย Error และสถานะ 500
+    // ส่ง Response กลับ
+    return NextResponse.json(notifyData);
+  } catch (error) {
     return NextResponse.json(
       {
-        ok: false,
         message: error instanceof Error ? error.message : "Unknown error",
       },
       { status: 500 }

@@ -1,32 +1,30 @@
 "use client";
 
 import { useState } from "react";
-// icons
 import { FiPlus, FiTrash2 } from "react-icons/fi";
-// types
 import type { SyntheticEvent } from "react";
-import type { ApiResult } from "../app/types/notification";
+import type { Response } from "../app/types/notification";
 
 function NotificationPage() {
-  const [userIds, setUserIds] = useState<string[]>([""]); // เริ่มต้นด้วย User ID 1 รายการ
-  const [message, setMessage] = useState(""); // ข้อความที่ต้องการส่ง
-  const [sendDateTime, setSendDateTime] = useState(""); // วันที่และเวลาที่ต้องการส่ง (รูปแบบ datetime-local)
-  const [loading, setLoading] = useState(false); // สถานะการส่งข้อมูล
-  const [result, setResult] = useState<ApiResult | null>(null); // ผลลัพธ์ที่ได้รับจาก API หลังส่งข้อมูล
+  const [userIds, setUserIds] = useState<string[]>([""]);
+  const [message, setMessage] = useState("");
+  const [sendDateTime, setSendDateTime] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  // ------------------------------- Fucntion -------------------------------
+  // แสดง Response
+  const [result, setResult] = useState<Response | null>(null);
 
-  // Function สำหรับเพิ่ม User ID ใหม่
+  // แสดง Error
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   function addUser() {
     setUserIds((prev) => [...prev, ""]);
   }
 
-  // Function สำหรับอัปเดตค่า User ID ในตำแหน่งที่ระบุ
   function updateUser(index: number, value: string) {
     setUserIds((prev) => prev.map((item, i) => (i === index ? value : item)));
   }
 
-  // Function สำหรับลบ User ID ออก โดยจะไม่ให้ลบจนเหลือต่ำกว่า 1 รายการ
   function removeUser(index: number) {
     setUserIds((prev) => {
       if (prev.length === 1) return prev;
@@ -34,52 +32,35 @@ function NotificationPage() {
     });
   }
 
-  // Function สำหรับจัดการเมื่อผู้ใช้กดส่งข้อมูล
   async function onSubmit(e: SyntheticEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
     setResult(null);
+    setErrorMessage(null);
 
-    // ตรวจสอบความถูกต้องของข้อมูลก่อนส่งไปยัง API
     try {
       const trimmedMessage = message.trim();
-      const users = userIds
-        .map((id) => id.trim())
-        .filter((id) => id.length > 0);
+      const users = userIds.map((id) => id.trim()).filter(Boolean);
 
-      // หากข้อความว่าง ให้แสดง Error
       if (!trimmedMessage) {
-        setResult({
-          ok: false,
-          message: "กรุณากรอกข้อความ",
-        });
+        setErrorMessage("กรุณากรอกข้อความ");
         return;
       }
 
-      // หากไม่มี User ID ที่ถูกกรอก ให้แสดง Error
       if (users.length === 0) {
-        setResult({
-          ok: false,
-          message: "กรุณากรอก User ID อย่างน้อย 1 รายการ",
-        });
+        setErrorMessage("กรุณากรอก User ID อย่างน้อย 1 รายการ");
         return;
       }
 
-      // หากจำนวน User ID เกิน 1000 ให้แสดง Error
       if (users.length > 1000) {
-        setResult({
-          ok: false,
-          message: "ส่งได้ไม่เกิน 1000 User ต่อครั้ง",
-        });
+        setErrorMessage("ส่งได้ไม่เกิน 1000 User ต่อครั้ง");
         return;
       }
 
-      // เตรียมข้อมูลใน Data ส่งไป Function sendDgaNotification
       const formattedSendDateTime = sendDateTime
         ? `${sendDateTime}:00+07:00`
         : null;
 
-      // สร้าง body เพื่อส่งไปยัง API
       const body = {
         data: users.map((id) => ({
           userId: id,
@@ -88,7 +69,6 @@ function NotificationPage() {
         sendDateTime: formattedSendDateTime,
       };
 
-      // ส่งข้อมูลไปยัง API Route
       const res = await fetch("/api/notification", {
         method: "POST",
         headers: {
@@ -97,21 +77,24 @@ function NotificationPage() {
         body: JSON.stringify(body),
       });
 
-      // รับผลลัพธ์จาก API และแสดงใน Log
-      const data: ApiResult = await res.json();
-      setResult(data);
-      // หาก API ตอบกลับไม่สำเร็จ ให้แสดง Error
+      const data = await res.json();
+
+      if (!res.ok) {
+        setErrorMessage(data?.message ?? "ส่ง Notification ไม่สำเร็จ");
+        return;
+      }
+
+      const notifyResponse = data as Response;
+
+      setResult(notifyResponse);
     } catch (error) {
-      setResult({
-        ok: false,
-        message: error instanceof Error ? error.message : "Unexpected error",
-      });
+      setErrorMessage(
+        error instanceof Error ? error.message : "Unexpected error"
+      );
     } finally {
       setLoading(false);
     }
   }
-
-  // ------------------------------- UI -------------------------------
 
   return (
     <main className="mx-auto max-w-2xl p-6">
@@ -199,6 +182,12 @@ function NotificationPage() {
           >
             {loading ? "Sending..." : "Send Notification"}
           </button>
+
+          {errorMessage && (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              {errorMessage}
+            </div>
+          )}
 
           {result && (
             <pre className="overflow-auto rounded-xl bg-gray-100 p-4 text-xs text-gray-800">
