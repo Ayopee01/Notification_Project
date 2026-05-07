@@ -36,8 +36,8 @@ APP_ID= โปรดระบุ
 
 | Key | Description |
 |---|---|
-| `GDX_AUTH_URL` | URL สำหรับตรวจสอบ GDX Authentication |
-| `NOTIFICATION_API_URL` | URL สำหรับส่ง Notification |
+| `GDX_AUTH_URL` | API สำหรับตรวจสอบ GDX Authentication |
+| `NOTIFICATION_API_URL` | API สำหรับส่ง Notification |
 | `DGA_CONSUMER_KEY` | Consumer Key ที่ได้รับจาก DGA |
 | `DGA_CONSUMER_SECRET` | Consumer Secret ที่ได้รับจาก DGA |
 | `DGA_AGENT_ID` | Agent ID สำหรับทดสอบบน Localhost |
